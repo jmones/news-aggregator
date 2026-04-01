@@ -1,0 +1,10 @@
+[project]
+name = "news-aggregator"
+version = "0.1.0"
+description = "Download, filter, and summarize news articles."
+requires-python = ">=3.8"
+authors = [ { name="Your Name" } ]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
