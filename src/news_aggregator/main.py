@@ -1,30 +1,35 @@
 import argparse
 from .fetcher import fetch_articles
-from .filter import filter_articles
-from .summarizer import summarize_article
+from .summarizer import extract_topics_and_summarize
 
 
 def main() -> int:
     parser = argparse.ArgumentParser("News Aggregator")
     parser.add_argument("--urls", nargs="+", required=True, help="News article URLs")
-    parser.add_argument("--keywords", nargs="*", default=[], help="Keywords for interest filtering")
-    parser.add_argument("--summary-sentences", type=int, default=3, help="Summary length in sentences")
+    parser.add_argument("--num-topics", type=int, default=5, help="Number of top topics to extract")
+    parser.add_argument("--summary-lines", type=int, default=3, help="Lines per topic summary")
     args = parser.parse_args()
 
     print("Fetching articles...")
     articles = fetch_articles(args.urls)
     print(f"Fetched {len(articles)} articles")
 
-    selected = filter_articles(articles, args.keywords)
-    print(f"Filtered {len(selected)} articles using keywords: {args.keywords}")
+    if not articles:
+        print("No articles fetched.")
+        return 1
 
-    for idx, article in enumerate(selected, 1):
-        summary = summarize_article(article, args.summary_sentences)
-        print("---")
-        print(f"Article {idx}: {article.title}")
-        print(f"URL: {article.url}")
-        print("Summary:")
-        print(summary)
+    # Combine all article texts
+    all_text = "\n\n".join(f"Title: {a.title}\n{a.text}" for a in articles)
+
+    print("Extracting top topics and summarizing...")
+    try:
+        topics = extract_topics_and_summarize(all_text, args.num_topics, args.summary_lines)
+        for topic, summary in topics.items():
+            print(f"\n--- {topic} ---")
+            print(summary)
+    except ValueError as e:
+        print(f"Error: {e}")
+        return 1
 
     return 0
 
