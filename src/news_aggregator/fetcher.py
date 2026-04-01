@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
+from typing import Iterable, List, Optional
 
 @dataclass
 class Article:
@@ -9,7 +10,7 @@ class Article:
     text: str
 
 
-def fetch_article(url: str, timeout=15) -> Article | None:
+def fetch_article(url: str, timeout=15) -> Optional[Article]:
     try:
         resp = requests.get(url, timeout=timeout, headers={"User-Agent": "news-aggregator/1.0"})
         resp.raise_for_status()
@@ -24,7 +25,7 @@ def fetch_article(url: str, timeout=15) -> Article | None:
         return None
 
 
-def fetch_articles(urls: list[str]) -> list[Article]:
+def fetch_articles(urls: List[str]) -> List[Article]:
     articles = []
     for url in urls:
         article = fetch_article(url)
