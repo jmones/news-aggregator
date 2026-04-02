@@ -31,6 +31,10 @@ dist/
 # pytest
 .cache/
 
+# Generated files
+index.html
+docs/index.html
+
 def fetch_article(url: str, timeout=15) -> Optional[Article]:
     """
     Fetch an article from a URL.
