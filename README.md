@@ -31,9 +31,19 @@ This workspace provides a minimal news aggregator that:
 The project includes GitHub Actions to automatically generate a website with daily news summaries.
 
 ### Setup
-1. In your GitHub repo, go to Settings > Secrets and variables > Actions.
-2. Add a new repository secret named `GROQ_API_KEY` with your Groq API key (get from https://console.groq.com/keys).
-3. Go to Settings > Pages, set source to "Deploy from a branch", select `gh-pages` branch.
+1. **Create Personal Access Token**:
+   - Go to https://github.com/settings/tokens
+   - Generate new token (classic) with `repo` scope
+   - Copy the token
+
+2. **Add to GitHub Secrets**:
+   - In your repo: Settings > Secrets and variables > Actions
+   - Add `GROQ_API_KEY` with your Groq API key
+   - Add `GH_PAGES_TOKEN` with your PAT
+
+3. **Enable GitHub Pages**:
+   - Settings > Pages > Source: "Deploy from a branch" > Branch: `gh-pages`
+
 4. Push the code; the action will run and deploy the site.
 
 The website updates daily at noon UTC, or manually via Actions tab.
