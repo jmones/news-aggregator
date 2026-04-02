@@ -58,9 +58,10 @@ def generate_html(topics: dict, output_file: str):
     <p>Generated on {__import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M')}</p>
 """
     for topic, summary in topics.items():
+        summary_html = summary.replace('\n', '<br>')
         html += f"""
     <h2>{topic}</h2>
-    <p>{summary.replace('\n', '<br>')}</p>
+    <p>{summary_html}</p>
 """
     html += """
 </body>

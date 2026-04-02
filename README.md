@@ -16,10 +16,11 @@ This workspace provides a minimal news aggregator that:
    ```bash
    pip install -r requirements.txt
    ```
-3. Set OpenAI API key:
+3. Set Groq API key (free tier available):
    ```bash
-   export OPENAI_API_KEY="your-key-here"
+   export GROQ_API_KEY="your-key-here"
    ```
+   Get key from https://console.groq.com/keys
 4. Run with sample URLs:
    ```bash
    python -m news_aggregator.main --urls $(cat urls.txt) --num-topics 5 --summary-lines 3
@@ -31,7 +32,7 @@ The project includes GitHub Actions to automatically generate a website with dai
 
 ### Setup
 1. In your GitHub repo, go to Settings > Secrets and variables > Actions.
-2. Add a new repository secret named `OPENAI_API_KEY` with your OpenAI API key.
+2. Add a new repository secret named `GROQ_API_KEY` with your Groq API key (get from https://console.groq.com/keys).
 3. Go to Settings > Pages, set source to "Deploy from a branch", select `gh-pages` branch.
 4. Push the code; the action will run and deploy the site.
 

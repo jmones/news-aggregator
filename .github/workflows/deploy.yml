@@ -28,7 +28,7 @@ jobs:
 
     - name: Run News Aggregator
       env:
-        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         PYTHONPATH: ${{ github.workspace }}/src
       run: |
         mkdir -p docs

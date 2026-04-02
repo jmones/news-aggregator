@@ -1,27 +1,42 @@
 import re
 import os
-from openai import OpenAI
+import requests
 from .fetcher import Article
 
 
-def extract_topics_and_summarize(all_text: str, num_topics: int = 5, summary_lines: int = 3) -> dict:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY not set. Please set it to use LLM features.")
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama3-8b-8192"  # Free tier model
 
-    client = OpenAI(api_key=api_key)
+
+def extract_topics_and_summarize(all_text: str, num_topics: int = 5, summary_lines: int = 3) -> dict:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        # Fallback to heuristic
+        return extract_topics_heuristic(all_text, num_topics, summary_lines)
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    prompt = f"Analyze the following news articles and identify the top {num_topics} topics. For each topic, provide a {summary_lines}-line summary. Format as: Topic 1: [summary]\n\nTopic 2: [summary]\n\nArticles:\n{all_text[:3000]}"
+    
+    data = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant that analyzes news articles."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 1000,
+        "temperature": 0.5
+    }
+    
     try:
-        prompt = f"Analyze the following news articles and identify the top {num_topics} topics. For each topic, provide a {summary_lines}-line summary based on the articles. Format as: Topic 1: [summary]\n\nTopic 2: [summary]\n\n etc.\n\nArticles:\n{all_text[:4000]}"  # Limit text length
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that analyzes news articles."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1000,
-            temperature=0.5
-        )
-        content = response.choices[0].message.content.strip()
+        response = requests.post(GROQ_API_URL, headers=headers, json=data, timeout=30)
+        response.raise_for_status()
+        
+        content = response.json()["choices"][0]["message"]["content"].strip()
+        
         # Parse the response
         topics = {}
         parts = content.split("\n\n")
@@ -29,9 +44,32 @@ def extract_topics_and_summarize(all_text: str, num_topics: int = 5, summary_lin
             if ": " in part:
                 topic, summary = part.split(": ", 1)
                 topics[topic.strip()] = summary.strip()
-        return topics
+        
+        return topics if topics else {"Summary": content}
     except Exception as e:
-        raise ValueError(f"LLM error: {e}")
+        # Fallback
+        return extract_topics_heuristic(all_text, num_topics, summary_lines)
+
+
+def extract_topics_heuristic(all_text: str, num_topics: int = 5, summary_lines: int = 3) -> dict:
+    # Simple fallback: extract keywords and summarize
+    words = re.findall(r'\b\w{4,}\b', all_text.lower())
+    word_freq = {}
+    for word in words:
+        if word not in ['that', 'with', 'from', 'this', 'they', 'have', 'been', 'will', 'said', 'were']:
+            word_freq[word] = word_freq.get(word, 0) + 1
+    
+    top_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:num_topics]
+    
+    topics = {}
+    for i, (word, freq) in enumerate(top_words, 1):
+        # Simple summary
+        sentences = re.split(r"(?<=[.!?])\s+", all_text)
+        relevant = [s for s in sentences if word in s.lower()][:summary_lines]
+        summary = " ".join(relevant) if relevant else f"Topic related to {word}."
+        topics[f"Topic {i}: {word.title()}"] = summary
+    
+    return topics
 
 
 def summarize_text(text: str, max_sentences: int = 3) -> str:
